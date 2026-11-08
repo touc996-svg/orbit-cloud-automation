@@ -28,3 +28,7 @@ ops-drift-development:
 
 ops-backup-development:
 	python3 tools/infra_ops.py backup-state --environment development
+
+.PHONY: production-readiness
+production-readiness:
+	python3 tools/production_readiness.py ci

@@ -43,3 +43,6 @@ infra/*.tfstate.*
 # ORBIT state and plan protection
 /backups/
 infra/state-backend/terraform.tfvars
+
+# ORBIT production readiness secrets and state backups
+/infra/production-readiness/terraform.tfvars
