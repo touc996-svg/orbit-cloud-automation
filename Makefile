@@ -16,3 +16,15 @@ plan:
 
 preflight:
 	python3 tools/deployment_preflight.py --ci
+
+
+.PHONY: ops-plan-development ops-drift-development ops-backup-development
+
+ops-plan-development:
+	python3 tools/infra_ops.py plan --environment development
+
+ops-drift-development:
+	python3 tools/infra_ops.py drift --environment development
+
+ops-backup-development:
+	python3 tools/infra_ops.py backup-state --environment development

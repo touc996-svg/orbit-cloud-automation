@@ -39,3 +39,7 @@ venv/
 infra/orbit.tfplan
 infra/*.tfstate
 infra/*.tfstate.*
+
+# ORBIT state and plan protection
+/backups/
+infra/state-backend/terraform.tfvars

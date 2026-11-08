@@ -1,0 +1,5 @@
+bucket         = "REPLACE_WITH_ORBIT_STATE_BUCKET"
+key            = "orbit/development/terraform.tfstate"
+region         = "us-east-1"
+dynamodb_table = "orbit-terraform-locks"
+encrypt        = true

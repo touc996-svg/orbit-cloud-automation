@@ -1,0 +1,47 @@
+name: ORBIT Batch 4 Infrastructure CI
+
+on:
+  push:
+    branches: [main, "feature/**"]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.9.8"
+
+      - name: Unit tests
+        run: python -m unittest discover -s tests -v
+
+      - name: Repository security scan
+        run: python tools/security_scan.py
+
+      - name: Terraform formatting
+        run: terraform -chdir=infra fmt -check -recursive
+
+      - name: Validate main infrastructure
+        run: |
+          terraform -chdir=infra init -backend=false -input=false
+          terraform -chdir=infra validate
+
+      - name: Validate state backend bootstrap
+        run: |
+          terraform -chdir=infra/state-backend init -backend=false -input=false
+          terraform -chdir=infra/state-backend validate
