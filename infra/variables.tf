@@ -43,3 +43,20 @@ variable "private_subnet_cidrs" {
   type        = list(string)
   default     = ["10.0.11.0/24", "10.0.12.0/24"]
 }
+
+variable "enable_vpc_flow_logs" {
+  description = "Create CloudWatch Logs VPC Flow Logs resources. Disabled by default to avoid ongoing log charges."
+  type        = bool
+  default     = false
+}
+
+variable "flow_log_retention_days" {
+  description = "CloudWatch log retention period when VPC Flow Logs are enabled."
+  type        = number
+  default     = 7
+
+  validation {
+    condition     = contains([1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365], var.flow_log_retention_days)
+    error_message = "Choose a supported CloudWatch Logs retention period."
+  }
+}

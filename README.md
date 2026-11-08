@@ -9,6 +9,8 @@ ORBIT is a portfolio-grade, Terraform-first AWS infrastructure baseline with Pyt
 - Two private subnets with no direct internet route and no NAT Gateway.
 - An S3 Gateway VPC endpoint associated with the private route table.
 - A private S3 artifacts bucket with versioning, bucket-owner-enforced object ownership, default encryption, public-access blocking, and a policy denying non-TLS requests.
+- Optional VPC Flow Logs to CloudWatch Logs, disabled by default to avoid ongoing ingestion charges.
+- A dependency-free repository security scanner for common accidentally committed AWS credentials, private-key markers, and Terraform state/plan artifacts.
 
 The private subnets intentionally have no NAT Gateway. This avoids an always-on NAT cost in the starter environment. Add controlled egress only when a workload requires it and the cost is understood.
 
@@ -36,6 +38,7 @@ Developer workstation / GitHub Actions
 1. The bootstrap script does not create AWS resources.
 2. `orbit doctor`, `orbit validate`, and `orbit plan` do not apply infrastructure.
 3. There is no `terraform apply` command in the Python CLI or CI workflow.
+4. VPC Flow Logs are disabled by default; enable them only after reviewing CloudWatch ingestion and retention costs.
 4. Terraform creates resources only when an operator deliberately runs `terraform apply` from `infra/` after reviewing a plan.
 5. NAT Gateways, EC2 instances, load balancers, and paid third-party services are not included in this baseline.
 6. AWS usage may still incur charges after resources are applied (for example, S3 storage and requests, public IPv4 addresses, and data transfer). Review current AWS pricing before deployment.
@@ -58,6 +61,7 @@ python3 tools/orbit.py doctor
 python3 -m unittest discover -s tests -v
 python3 tools/orbit.py validate
 python3 tools/orbit.py plan
+python3 tools/orbit.py security-scan
 ```
 
 `validate` runs formatting, initializes providers without configuring a remote backend, and validates the Terraform configuration. The first `init` downloads provider plugins and may create `.terraform.lock.hcl`.

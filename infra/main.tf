@@ -19,3 +19,12 @@ module "storage" {
   bucket_name  = local.artifacts_bucket
   project_name = var.project_name
 }
+
+module "observability" {
+  source = "./modules/observability"
+
+  project_name            = var.project_name
+  vpc_id                  = module.network.vpc_id
+  enable_vpc_flow_logs    = var.enable_vpc_flow_logs
+  flow_log_retention_days = var.flow_log_retention_days
+}
