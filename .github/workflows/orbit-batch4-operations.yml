@@ -1,0 +1,100 @@
+name: ORBIT Environment Operations
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Target environment
+        required: true
+        type: choice
+        options:
+          - development
+          - staging
+          - production
+      operation:
+        description: Read-only infrastructure operation
+        required: true
+        type: choice
+        options:
+          - plan
+          - drift
+  schedule:
+    - cron: "17 13 * * 1"
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  manual-operation:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+
+    env:
+      ORBIT_TF_STATE_BUCKET: ${{ vars.ORBIT_TF_STATE_BUCKET }}
+      ORBIT_TF_STATE_REGION: ${{ vars.ORBIT_TF_STATE_REGION }}
+      ORBIT_TF_STATE_LOCK_TABLE: ${{ vars.ORBIT_TF_STATE_LOCK_TABLE }}
+      ORBIT_ALLOWED_AWS_ACCOUNT: ${{ vars.ORBIT_ALLOWED_AWS_ACCOUNT }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.9.8"
+
+      - name: Configure AWS identity through OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.ORBIT_AWS_ROLE_ARN }}
+          aws-region: ${{ vars.ORBIT_AWS_REGION }}
+
+      - name: Run approved read-only operation
+        run: |
+          python tools/infra_ops.py "${{ inputs.operation }}" \
+            --environment "${{ inputs.environment }}"
+
+  weekly-development-drift:
+    if: >-
+      github.event_name == 'schedule' &&
+      vars.ORBIT_AWS_ROLE_ARN != '' &&
+      vars.ORBIT_TF_STATE_BUCKET != ''
+    runs-on: ubuntu-latest
+    environment: development
+
+    env:
+      ORBIT_TF_STATE_BUCKET: ${{ vars.ORBIT_TF_STATE_BUCKET }}
+      ORBIT_TF_STATE_REGION: ${{ vars.ORBIT_TF_STATE_REGION }}
+      ORBIT_TF_STATE_LOCK_TABLE: ${{ vars.ORBIT_TF_STATE_LOCK_TABLE }}
+      ORBIT_ALLOWED_AWS_ACCOUNT: ${{ vars.ORBIT_ALLOWED_AWS_ACCOUNT }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.9.8"
+
+      - name: Configure AWS identity through OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.ORBIT_AWS_ROLE_ARN }}
+          aws-region: ${{ vars.ORBIT_AWS_REGION }}
+
+      - name: Check development infrastructure drift
+        run: python tools/infra_ops.py drift --environment development
