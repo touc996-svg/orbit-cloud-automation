@@ -11,3 +11,8 @@ validate:
 
 plan:
 	python3 tools/orbit.py plan
+
+.PHONY: preflight
+
+preflight:
+	python3 tools/deployment_preflight.py --ci
