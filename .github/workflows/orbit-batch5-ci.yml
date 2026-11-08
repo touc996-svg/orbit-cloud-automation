@@ -1,0 +1,46 @@
+name: ORBIT Batch 5 Production Readiness
+
+on:
+  push:
+    branches: [main, "feature/**"]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  production-readiness:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.9.8"
+
+      - name: Python unit tests
+        run: python -m unittest discover -s tests -v
+
+      - name: Production readiness preflight
+        run: python tools/production_readiness.py ci
+
+      - name: Repository secret scan
+        run: python tools/security_scan.py
+
+      - name: Terraform formatting
+        run: terraform -chdir=infra/production-readiness fmt -check -recursive
+
+      - name: Initialize production readiness stack without backend
+        run: terraform -chdir=infra/production-readiness init -backend=false -input=false
+
+      - name: Validate production readiness stack
+        run: terraform -chdir=infra/production-readiness validate
