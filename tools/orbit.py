@@ -20,7 +20,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "command",
-        choices=("doctor", "validate", "plan"),
+        choices=("doctor", "validate", "plan", "security-scan"),
         help="doctor checks tools/credentials; validate checks Terraform; plan previews changes.",
     )
     return parser
@@ -90,6 +90,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         return validate()
     if args.command == "plan":
         return plan()
+    if args.command == "security-scan":
+        return run_command([sys.executable, str(ROOT / "tools" / "security_scan.py")], cwd=ROOT)
     return 2
 
 

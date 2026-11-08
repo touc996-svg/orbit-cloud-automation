@@ -34,3 +34,8 @@ venv/
 .DS_Store
 .vscode/
 .idea/
+
+# Terraform generated outputs
+infra/orbit.tfplan
+infra/*.tfstate
+infra/*.tfstate.*
